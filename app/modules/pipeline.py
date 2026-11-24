@@ -1,6 +1,7 @@
 from app.business import DomainIssue
 from app.intake.service import inspect
 from app.modules.calculate import compute
+from app.modules.diagnose import diagnose
 from app.modules.grouping import case_groups
 from app.modules.policy import policy
 from app.modules.prepare import prepare
@@ -13,6 +14,7 @@ def evaluate(rows, stage):
         "records": [r["record"] for r in rows],
         "status": "READY",
     }
+    payload = None
     try:
         case["prep"], payload = prepare(rows)
         if stage >= 3:
@@ -21,16 +23,18 @@ def evaluate(rows, stage):
             case.update(policy(case["measure"]))
     except DomainIssue as error:
         case["status"] = error.code
+    if stage >= 5 and case["status"] != "READY":
+        case["diagnosis"] = diagnose(case, payload, rows)
     return case
 
 
-def run(data, stage=5):
+def run(data, stage=6):
     intake = inspect(data)
     output = {"intake": {k: v for k, v in intake.items() if k != "rows"}}
     if stage == 1:
         return output
     cases = [evaluate(rows, stage) for _, rows in case_groups(intake["rows"])]
     output["cases"] = cases
-    if stage >= 5:
+    if stage >= 6:
         output["balance"] = balance(intake, cases)
     return output

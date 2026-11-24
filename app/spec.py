@@ -8,6 +8,7 @@ PROJECT = {
         ("prepare", "同步点校核"),
         ("calculate", "漂移插值"),
         ("policy", "误差审查"),
+        ("diagnose", "异常归因"),
         ("balance", "运行对账"),
     ],
     "chart": "参考时钟",

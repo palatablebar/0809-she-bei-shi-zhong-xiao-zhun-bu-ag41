@@ -7,7 +7,14 @@ from app.modules.pipeline import run
 from app.review.service import execute, review
 
 api = Blueprint("api", __name__, url_prefix="/api")
-STAGES = {"intake": 1, "prepare": 2, "calculate": 3, "policy": 4, "balance": 5}
+STAGES = {
+    "intake": 1,
+    "prepare": 2,
+    "calculate": 3,
+    "policy": 4,
+    "diagnose": 5,
+    "balance": 6,
+}
 
 
 @api.post("/stages/<stage>")

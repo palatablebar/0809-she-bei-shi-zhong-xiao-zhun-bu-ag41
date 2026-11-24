@@ -10,9 +10,10 @@
 | M2 同步点校核 | 检查领域约束 | `POST /api/stages/prepare` | `app/modules/prepare.py` | `tests/test_prepare.py` |
 | M3 漂移插值 | 查看业务计算结果 | `POST /api/stages/calculate` | `app/modules/calculate.py` | `tests/test_calculate.py` |
 | M4 误差审查 | 查看签收判定 | `POST /api/stages/policy` | `app/modules/policy.py` | `tests/test_policy.py` |
-| M5 运行对账 | 对照输入、采信和隔离行 | `POST /api/stages/balance` | `app/modules/reconcile.py` | `tests/test_reconcile.py` |
-| M6 批次复核 | 执行批次并签发或暂缓 | `POST /api/runs、PATCH /api/runs/<id>` | `app/review/service.py` | `tests/test_review.py` |
-| M7 证据交付 | 下载复核清单 | `GET /api/runs/<id>/evidence` | `app/evidence/render.py` | `tests/test_evidence.py` |
+| M5 异常归因 | 归属漂移、跳变或证据不足 | `POST /api/stages/diagnose` | `app/modules/diagnose.py` | `tests/test_diagnose.py` |
+| M6 运行对账 | 对照输入、隔离和诊断 | `POST /api/stages/balance` | `app/modules/reconcile.py` | `tests/test_reconcile.py` |
+| M7 批次复核 | 执行批次并签发或暂缓 | `POST /api/runs、PATCH /api/runs/<id>` | `app/review/service.py` | `tests/test_review.py` |
+| M8 证据交付 | 下载复核清单 | `GET /api/runs/<id>/evidence` | `app/evidence/render.py` | `tests/test_evidence.py` |
 
 ## 输入陷阱
 
@@ -35,3 +36,7 @@
 设备 tick 与参考毫秒必须同时递增。使用位于样本两侧的同步点，允许命中同步端点。插值以有理数计算，半毫秒进位。
 
 逐组预期结论见 `tests/test_policy.py`，计算过程证据见 `tests/test_calculate.py`。
+
+## 异常归因
+
+每个非 READY 分组都生成诊断：检查点确认基准而读数偏离为设备漂移；检查点确认读数而基准偏离且相邻同步段速率矛盾时为基准跳变；证据冲突或结构性异常一律保留为证据不足，不为赶交接强行归因。诊断标出受影响读数记录键，各分组独立归因，一个冲突组不拖住其他组。同一来源重跑命中同一批次不新增诊断；迟到数据只生成新批次，不改写已签发结论。输入守恒、隔离清零且异常全部完成归因（证据不足是合法终态）才允许签发。
